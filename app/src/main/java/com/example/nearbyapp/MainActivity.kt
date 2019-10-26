@@ -6,7 +6,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
 import androidx.multidex.MultiDex
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,24 +14,18 @@ import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.example.nearbyapp.api.ApiInterface
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.example.nearbyapp.model.Item
 import com.example.nearbyapp.model.NearByResponse
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableObserver
-import io.reactivex.schedulers.Schedulers
+import com.example.nearbyapp.viewmodel.PlacesRetrievalViewModel
 
 
 class MainActivity : AppCompatActivity() {
 
-    private val mCompositeDisposable = CompositeDisposable()
     private lateinit var nearbyPlacesRecyclerAdapter: NearbyPlacesRecyclerAdapter
     private lateinit var locationManager: LocationManager
     private lateinit var recyclerView: RecyclerView
-    private val CLIENT_ID: String = "OYOAJQXZDNYHPTYPDDXN3GH4CC4Z35PLWESXDEUCJIZVWCON"
-    private val CLIENT_SECRET: String = "TAQJQZAJPSSG2DLBTZMBZRNHKJFKWRR0JGYAGWRBQA20GM4E"
-    private val NEAR: String = "cairo"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,27 +34,19 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.rv_nearby_locations)
 
-//        val viewModel =
-//            ViewModelProviders.of(this).get(PlacesRetrievalViewModel::class.java)
-//
-//        viewModel.getLocations("40.5,36.4", object : CallBack {
-//            override fun onResponse(nearbyPlace: NearbyPlace) {
-//                displayLocations(nearbyPlace)
-//                Log.d("Response", "Near")
-//                Toast.makeText(MainActivity(), "Nearby Places", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-
-        fetchLocations("40.5,36.4")
+        //First load it gives a fake location data until user check a Realtime option
+        getLocations("40.5,36.4")
         checkPermission()
     }
 
     private fun displayLocations(locationsList: NearByResponse) {
 
+        val locations: ArrayList<Item> =
+            locationsList?.response?.groups?.get(0)?.items as ArrayList<Item>
+
         nearbyPlacesRecyclerAdapter =
             NearbyPlacesRecyclerAdapter(
-                this@MainActivity,
-                locationsList.response.groups[0].items as ArrayList<Item>
+                this@MainActivity, locations
             )
         recyclerView.layoutManager =
             LinearLayoutManager(this@MainActivity)
@@ -72,7 +57,7 @@ class MainActivity : AppCompatActivity() {
     private val locationListener: LocationListener = object : LocationListener {
 
         override fun onLocationChanged(location: Location) {
-            fetchLocations("${location.longitude},${location.latitude})")
+            getLocations("${location.longitude},${location.latitude})")
         }
 
         override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
@@ -88,8 +73,6 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 1) {
             if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 //Permission Granted
-                //Do your work here
-                //Perform operations here only which requires permission
                 getCurrentLocation()
             }
         }
@@ -107,8 +90,6 @@ class MainActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             // Permission already Granted
-            //Do your work here
-            //Perform operations here only which requires permission
             getCurrentLocation()
 
         } else {
@@ -152,28 +133,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun fetchLocations(lngLat: String) {
+    private fun getLocations(lngLat: String) {
 
-        mCompositeDisposable.add(
-            ApiInterface.create().getPlaces(lngLat, CLIENT_ID, CLIENT_SECRET, "20191020", NEAR, "1")
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<NearByResponse>() {
-                    override fun onNext(t: NearByResponse) {
+        val viewModel = ViewModelProviders.of(this).get(PlacesRetrievalViewModel::class.java)
+        viewModel.fetchLocations(lngLat)?.observe(this, Observer<NearByResponse>
+        { androidList -> displayLocations(androidList) })
 
-                        val str = t.response.groups[0].items.size
-                        displayLocations(t)
-                        Toast.makeText(this@MainActivity, "$str", Toast.LENGTH_SHORT).show()
-                    }
-
-                    override fun onError(e: Throwable) {
-                        Log.d("MainActivity", e.message)
-                    }
-
-                    override fun onComplete() {
-                        Toast.makeText(this@MainActivity, "Success", Toast.LENGTH_SHORT).show()
-                        nearbyPlacesRecyclerAdapter.notifyDataSetChanged()
-                    }
-                })
-        )
     }
+
 }

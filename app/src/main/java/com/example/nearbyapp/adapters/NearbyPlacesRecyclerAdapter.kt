@@ -6,17 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.example.nearbyapp.R
-import com.example.nearbyapp.api.ApiInterface
 import com.example.nearbyapp.model.Item
 import com.example.nearbyapp.model.PhotoResponse
 import com.example.nearbyapp.model.Venue
+import com.example.nearbyapp.viewmodel.PlacesRetrievalViewModel
 import com.squareup.picasso.Picasso
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableObserver
-import io.reactivex.schedulers.Schedulers
+
 
 class NearbyPlacesRecyclerAdapter(
     private val context: Context,
@@ -33,41 +33,44 @@ class NearbyPlacesRecyclerAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bindView(nearbyPlace[position].venue)
+        holder.bindView(nearbyPlace[position].venue, context)
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        private val mCompositeDisposable = CompositeDisposable()
         private val nameTextView: TextView = itemView.findViewById(R.id.tv_place_name) as TextView
-        private val addressTextView: TextView = itemView.findViewById(R.id.tv_place_address) as TextView
-        private val placePhotoIV: ImageView = itemView.findViewById(R.id.iv_place_image) as ImageView
+        private val addressTextView: TextView =
+            itemView.findViewById(R.id.tv_place_address) as TextView
+        private val placePhotoIV: ImageView =
+            itemView.findViewById(R.id.iv_place_image) as ImageView
 
-        fun bindView(venue: Venue) {
+        fun bindView(venue: Venue, context: Context) {
 
             nameTextView.text = venue.name
             addressTextView.text = venue.location.address
-            fetchPhoto(venue.id, placePhotoIV)
+            fetchPhoto(venue.id, placePhotoIV, context)
         }
 
-        private fun fetchPhoto(venueId: String, imageView: ImageView) {
+        private fun fetchPhoto(venueId: String, imageView: ImageView, context: Context) {
 
-            mCompositeDisposable.add(
-                ApiInterface.create().getPhoto(
-                    venueId, "OYOAJQXZDNYHPTYPDDXN3GH4CC4Z35PLWESXDEUCJIZVWCON"
-                    , "TAQJQZAJPSSG2DLBTZMBZRNHKJFKWRR0JGYAGWRBQA20GM4E",
-                    "20191024", "cairo")
-                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                    .subscribeWith(object : DisposableObserver<PhotoResponse>() {
-                        override fun onNext(t: PhotoResponse) {
-                            Picasso.get().load(t.response.venue.tips.groups[0].items[0].photourl).into(imageView)
-                        }
-                        override fun onError(e: Throwable) {
-                        }
-                        override fun onComplete() {
-                        }
-                    })
-            )
+            val viewModel = ViewModelProviders.of(context as FragmentActivity)
+                .get(PlacesRetrievalViewModel::class.java)
+            viewModel.fetchPhoto(venueId)?.observe(context, Observer<PhotoResponse> { androidList ->
+
+                Picasso.get().load(
+                    androidList.response
+                        ?.venue
+                        ?.tips
+                        ?.groups
+                        ?.get(0)
+                        ?.items
+                        ?.get(0)
+                        ?.photourl
+                ).into(imageView)
+            })
+
         }
+
     }
+
 }
