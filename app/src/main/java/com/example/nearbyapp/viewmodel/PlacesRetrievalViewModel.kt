@@ -3,8 +3,8 @@ package com.example.nearbyapp.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.nearbyapp.api.ApiInterface
-import com.example.nearbyapp.api.PlaceRepository
-import com.example.nearbyapp.api.Result
+import com.example.nearbyapp.repoository.PlaceRepository
+import com.example.nearbyapp.repoository.Result
 import com.example.nearbyapp.model.NearByResponse
 import com.example.nearbyapp.model.PhotoResponse
 import javax.inject.Inject

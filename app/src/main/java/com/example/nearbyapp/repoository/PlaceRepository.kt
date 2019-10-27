@@ -1,8 +1,9 @@
-package com.example.nearbyapp.api
+package com.example.nearbyapp.repoository
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.nearbyapp.Utilities.Constants
+import com.example.nearbyapp.api.ApiInterface
 import com.example.nearbyapp.model.NearByResponse
 import com.example.nearbyapp.model.PhotoResponse
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -35,16 +36,23 @@ class PlaceRepository @Inject constructor(private val api: ApiInterface) {
                         liveUserResponse.value?.data = nearByResponse
                         val size = nearByResponse.response.groups[0].items.size
                         if (size == 0) {
-                            liveUserResponse.value = Result.loading(nearByResponse)
+                            liveUserResponse.value =
+                                Result.loading(
+                                    nearByResponse
+                                )
                         } else {
-                            liveUserResponse.value = Result.success(nearByResponse)
+                            liveUserResponse.value =
+                                Result.success(
+                                    nearByResponse
+                                )
                         }
                         Log.d("Response: ", "$size")
                     }
 
                     override fun onError(e: Throwable) {
                         Log.d("MainActivity", e.message)
-                        liveUserResponse.value = Result.error("Something went wrong !!")
+                        liveUserResponse.value =
+                            Result.error("Something went wrong !!")
                     }
 
                     override fun onComplete() {

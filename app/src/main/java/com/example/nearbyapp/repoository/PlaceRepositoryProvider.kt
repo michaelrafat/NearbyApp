@@ -1,4 +1,6 @@
-package com.example.nearbyapp.api
+package com.example.nearbyapp.repoository
+
+import com.example.nearbyapp.api.ApiInterface
 
 object PlaceRepositoryProvider {
 
