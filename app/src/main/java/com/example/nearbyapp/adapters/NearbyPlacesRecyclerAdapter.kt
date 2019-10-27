@@ -6,15 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.example.nearbyapp.R
 import com.example.nearbyapp.model.Item
-import com.example.nearbyapp.model.PhotoResponse
 import com.example.nearbyapp.model.Venue
-import com.example.nearbyapp.viewmodel.PlacesRetrievalViewModel
 import com.squareup.picasso.Picasso
 
 
@@ -48,27 +43,10 @@ class NearbyPlacesRecyclerAdapter(
 
             nameTextView.text = venue.name
             addressTextView.text = venue.location.address
-            fetchPhoto(venue.id, placePhotoIV, context)
-        }
 
-        private fun fetchPhoto(venueId: String, imageView: ImageView, context: Context) {
-
-            val viewModel = ViewModelProviders.of(context as FragmentActivity)
-                .get(PlacesRetrievalViewModel::class.java)
-            viewModel.fetchPhoto(venueId)?.observe(context, Observer<PhotoResponse> { androidList ->
-
-                Picasso.get().load(
-                    androidList.response
-                        ?.venue
-                        ?.tips
-                        ?.groups
-                        ?.get(0)
-                        ?.items
-                        ?.get(0)
-                        ?.photourl
-                ).into(imageView)
-            })
-
+            Picasso.get().load(
+                venue?.categories[0].icon.prefix + 512 + venue?.categories[0].icon.suffix
+            ).into(placePhotoIV)
         }
 
     }

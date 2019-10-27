@@ -11,9 +11,5 @@ data class Venue(
     @SerializedName("location")
     val location: Location,
     @SerializedName("name")
-    val name: String,
-    @SerializedName("photos")
-    val photos: Photos,
-    @SerializedName("venuePage")
-    val venuePage: VenuePage
+    val name: String
 )

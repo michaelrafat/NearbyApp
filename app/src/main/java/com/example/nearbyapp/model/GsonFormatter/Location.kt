@@ -14,8 +14,6 @@ data class Location(
     val country: String,
     @SerializedName("formattedAddress")
     val formattedAddress: List<String>,
-    @SerializedName("labeledLatLngs")
-    val labeledLatLngs: List<LabeledLatLng>,
     @SerializedName("lat")
     val lat: Double,
     @SerializedName("lng")

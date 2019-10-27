@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         MultiDex.install(this)
 
+        checkPermission()
         initView()
         setSwitchOption()
         switchRealtimeLocationOption()
@@ -229,7 +230,7 @@ class MainActivity : AppCompatActivity() {
         editor = sharedPreferences.edit()
 
         if (sharedPreferences.getBoolean(REALTIME, false)) {
-            getCurrentLocation()
+            checkPermission()
             return true
         }
         //First load it gives a fake location data until user check a Realtime option

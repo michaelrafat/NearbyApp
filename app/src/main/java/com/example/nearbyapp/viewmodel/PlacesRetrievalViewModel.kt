@@ -6,7 +6,6 @@ import com.example.nearbyapp.api.ApiInterface
 import com.example.nearbyapp.repoository.PlaceRepository
 import com.example.nearbyapp.repoository.Result
 import com.example.nearbyapp.model.NearByResponse
-import com.example.nearbyapp.model.PhotoResponse
 import javax.inject.Inject
 
 class PlacesRetrievalViewModel : ViewModel() {
@@ -15,10 +14,6 @@ class PlacesRetrievalViewModel : ViewModel() {
 
     fun fetchLocations(lngLat: String): MutableLiveData<Result<NearByResponse>>? {
         return mService.loadLocations(lngLat)
-    }
-
-    fun fetchPhoto(venueId: String): MutableLiveData<PhotoResponse>? {
-        return mService.loadPhoto(venueId)
     }
 
     @Inject

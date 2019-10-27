@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     android:animateLayoutChanges="true"
-    card_view:cardBackgroundColor="#F3F3F3"
+    card_view:cardBackgroundColor="@android:color/holo_blue_dark"
     card_view:cardCornerRadius="8dp"
     card_view:cardElevation="8dp">
 
@@ -27,6 +27,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_margin="16dp"
             android:layout_weight="2"
             android:animateLayoutChanges="true"
@@ -45,7 +46,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Name"
-                android:textColor="@android:color/holo_blue_dark"
+                android:textColor="@android:color/white"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 

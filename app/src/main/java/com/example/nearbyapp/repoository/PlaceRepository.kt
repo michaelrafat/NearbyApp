@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import com.example.nearbyapp.Utilities.Constants
 import com.example.nearbyapp.api.ApiInterface
 import com.example.nearbyapp.model.NearByResponse
-import com.example.nearbyapp.model.PhotoResponse
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
@@ -15,7 +14,6 @@ import javax.inject.Inject
 class PlaceRepository @Inject constructor(private val api: ApiInterface) {
 
     private val liveUserResponse: MutableLiveData<Result<NearByResponse>> = MutableLiveData()
-    private val photoUrl: MutableLiveData<PhotoResponse> = MutableLiveData()
     private val mCompositeDisposable = CompositeDisposable()
 
     fun loadLocations(lngLat: String): MutableLiveData<Result<NearByResponse>>? {
@@ -60,33 +58,6 @@ class PlaceRepository @Inject constructor(private val api: ApiInterface) {
                 })
         )
         return liveUserResponse
-    }
-
-    fun loadPhoto(venueId: String): MutableLiveData<PhotoResponse> {
-
-        mCompositeDisposable.add(
-
-            PlaceRepositoryProvider.provideSearchRepository().api.getPhoto(
-                venueId, Constants.CLIENT_ID
-                , Constants.CLIENT_SECRET,
-                Constants.DATE,
-                Constants.NEAR
-            )
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableObserver<PhotoResponse>() {
-                    override fun onNext(photoResponse: PhotoResponse) {
-                        photoUrl?.value = photoResponse
-                    }
-
-                    override fun onError(e: Throwable) {
-                    }
-
-                    override fun onComplete() {
-                    }
-                })
-        )
-
-        return photoUrl
     }
 
 }
