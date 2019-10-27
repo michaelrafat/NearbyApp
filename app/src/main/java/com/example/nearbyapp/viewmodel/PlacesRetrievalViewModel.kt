@@ -2,15 +2,18 @@ package com.example.nearbyapp.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.nearbyapp.api.APiService
+import com.example.nearbyapp.api.ApiInterface
+import com.example.nearbyapp.api.PlaceRepository
+import com.example.nearbyapp.api.Result
 import com.example.nearbyapp.model.NearByResponse
 import com.example.nearbyapp.model.PhotoResponse
+import javax.inject.Inject
 
 class PlacesRetrievalViewModel : ViewModel() {
 
-    private val mService = APiService()
+    private var mService = PlaceRepository(ApiInterface.create())
 
-    fun fetchLocations(lngLat: String): MutableLiveData<NearByResponse>? {
+    fun fetchLocations(lngLat: String): MutableLiveData<Result<NearByResponse>>? {
         return mService.loadLocations(lngLat)
     }
 
@@ -18,4 +21,8 @@ class PlacesRetrievalViewModel : ViewModel() {
         return mService.loadPhoto(venueId)
     }
 
+    @Inject
+    fun init(repository: PlaceRepository) {
+        this.mService = repository
+    }
 }

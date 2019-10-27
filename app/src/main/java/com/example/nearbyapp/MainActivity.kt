@@ -13,12 +13,20 @@ import com.example.nearbyapp.adapters.NearbyPlacesRecyclerAdapter
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
 import android.util.Log
+import android.view.View
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.nearbyapp.model.Item
 import com.example.nearbyapp.model.NearByResponse
 import com.example.nearbyapp.viewmodel.PlacesRetrievalViewModel
+import android.location.Criteria
+import android.widget.Toast
+import com.example.nearbyapp.api.Result
 
 
 class MainActivity : AppCompatActivity() {
@@ -26,30 +34,31 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nearbyPlacesRecyclerAdapter: NearbyPlacesRecyclerAdapter
     private lateinit var locationManager: LocationManager
     private lateinit var recyclerView: RecyclerView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var imageView: ImageView
+    private lateinit var textView: TextView
+    private lateinit var constraintLayout: ConstraintLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MultiDex.install(this)
 
-        recyclerView = findViewById(R.id.rv_nearby_locations)
-
+        initView()
         //First load it gives a fake location data until user check a Realtime option
-        getLocations("40.5,36.4")
+        // getLocations("40.5145422,30.4454545454")
         checkPermission()
     }
 
-    private fun displayLocations(locationsList: NearByResponse) {
+    private fun displayLocations(locationsList: Result<NearByResponse>) {
 
         val locations: ArrayList<Item> =
-            locationsList?.response?.groups?.get(0)?.items as ArrayList<Item>
+            locationsList.data?.response?.groups?.get(0)?.items as ArrayList<Item>
 
-        nearbyPlacesRecyclerAdapter =
-            NearbyPlacesRecyclerAdapter(
-                this@MainActivity, locations
-            )
-        recyclerView.layoutManager =
-            LinearLayoutManager(this@MainActivity)
+        progressBar.visibility = View.GONE
+
+        nearbyPlacesRecyclerAdapter = NearbyPlacesRecyclerAdapter(this@MainActivity, locations)
+        recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
         recyclerView.adapter = nearbyPlacesRecyclerAdapter
         nearbyPlacesRecyclerAdapter.notifyDataSetChanged()
     }
@@ -58,6 +67,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onLocationChanged(location: Location) {
             getLocations("${location.longitude},${location.latitude})")
+            Log.d("MainActivity", "${location.longitude},${location.latitude})")
         }
 
         override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
@@ -106,39 +116,90 @@ class MainActivity : AppCompatActivity() {
 
     private fun getCurrentLocation() {
 
-        val permission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
+        val permission =
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+
         if (permission != PackageManager.PERMISSION_GRANTED) {
             Log.i("Permission", "Permission denied")
             return
         }
+        locationManager = this.getSystemService(LOCATION_SERVICE) as LocationManager
 
-        locationManager = (getSystemService(LOCATION_SERVICE) as LocationManager?)!!
-        val currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+        val criteria = Criteria()
+        val bestProvider = locationManager.getBestProvider(criteria, true).toString()
+        val currentLocation = locationManager.getLastKnownLocation(bestProvider)
 
         if (currentLocation != null) {
             //Update places
             try {
                 locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
-                    3000,
+                    60000,
                     500f, // Update after 500 meter
                     this.locationListener
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        } else {
+            locationManager.requestLocationUpdates(bestProvider, 10000, 500f, this.locationListener)
         }
     }
 
     private fun getLocations(lngLat: String) {
 
-        val viewModel = ViewModelProviders.of(this).get(PlacesRetrievalViewModel::class.java)
-        viewModel.fetchLocations(lngLat)?.observe(this, Observer<NearByResponse>
-        { androidList -> displayLocations(androidList) })
+        val viewModel =
+            ViewModelProviders.of(this@MainActivity).get(PlacesRetrievalViewModel::class.java)
+        viewModel.fetchLocations(lngLat)?.observe(this, Observer<Result<NearByResponse>>
+        { resource ->
 
+            if (resource != null) {
+                when (resource.status) {
+                    Result.Status.SUCCESS -> {
+                        val product = resource.data;
+                        val products = product?.response?.groups?.get(0)?.items?.size
+                        if (products != null) {
+                            if (products > 0) {
+                                constraintLayout.visibility = View.GONE
+                                displayLocations(resource)
+                            }
+                        }
+                    }
+                    Result.Status.ERROR -> {
+                        Toast.makeText(this, "Error", Toast.LENGTH_LONG).show()
+                        handleEmptyView(0)
+                    }
+                    Result.Status.LOADING -> {
+                        Toast.makeText(this, "No data found", Toast.LENGTH_LONG).show()
+                        handleEmptyView(1)
+                    }
+                }
+            }
+        })
+    }
+
+    private fun handleEmptyView(responseCode: Int) {
+
+        progressBar.visibility = View.GONE
+
+        constraintLayout.visibility = View.VISIBLE
+
+        if (responseCode == 0) {
+            textView.text = "Something went wrong !!"
+            imageView.setImageResource(R.drawable.error)
+        } else {
+            textView.text = "No data found !!"
+            imageView.setImageResource(R.drawable.info)
+        }
+    }
+
+    private fun initView() {
+
+        recyclerView = findViewById(R.id.rv_nearby_locations)
+        progressBar = findViewById(R.id.pb_loading)
+        textView = findViewById(R.id.tv_message)
+        imageView = findViewById(R.id.iv_message)
+        constraintLayout = findViewById(R.id.cl_message)
     }
 
 }

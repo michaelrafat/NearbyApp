@@ -7,5 +7,6 @@ data class NearByResponse(
     @SerializedName("meta")
     val meta: Meta,
     @SerializedName("response")
-    val response: Response
+    val response: Response,
+    var responseCode: Int
 )
